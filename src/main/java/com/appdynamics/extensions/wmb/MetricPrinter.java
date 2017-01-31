@@ -39,6 +39,7 @@ public class MetricPrinter {
             String fullMetricPath = formMetricPath(metric.getMetricKey());
             printMetric(fullMetricPath,metric.getMetricValue(), props.getAggregationType(),props.getTimeRollupType(),props.getClusterRollupType());
         }
+        // TODO misleading, is logged separately for resource and flow metrics
         logger.debug("Total number of metrics reported by WMBMonitor {}",getTotalMetricsReported());
     }
 
@@ -48,8 +49,8 @@ public class MetricPrinter {
             String metricValStr = toBigIntString(metricValue);
             if(metricValStr != null) {
                 metricWriter.printMetric(metricPath,metricValStr,aggType,timeRollupType,clusterRollupType);
-                  //System.out.println("Sending [" + aggType + "|" + timeRollupType + "|" + clusterRollupType
-                  //		+ "] metric = " + metricPath + " = " + metricValStr);
+//                  System.out.println("Sending [" + aggType + "|" + timeRollupType + "|" + clusterRollupType
+//                  		+ "] metric = " + metricPath + " = " + metricValStr);
                 logger.debug("Sending [{}|{}|{}] metric= {},value={}", aggType, timeRollupType, clusterRollupType, metricPath, metricValStr);
                 totalMetricsReported++;
             }

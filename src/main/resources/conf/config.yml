@@ -33,7 +33,10 @@ queueManagers:
     metrics:
       resourceStatistics:
         - name: "$SYS/Broker/+/ResourceStatistics/#"
-          subscriberName: "allResources"
+          subscriberName: "allResourceStatistics"
+      flowStatistics:
+        - name: "$SYS/Broker/+/StatisticsAccounting/SnapShot/#/#""
+          subscriberName: "allFlowStatistics"
 
 
 numberOfThreads: 10
