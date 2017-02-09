@@ -24,32 +24,14 @@ If this extension is configured for **CLIENT** transport type (more on that late
 Dependencies
 ------------
 
-All the jars in the **<IBM_INSTALL_DIR>\WebSphere MQ\java\lib** directory or its equivalent on Unix namely - 
+This extension requires the IBM MQ JMS client classes. Refer to the IBM documentation for the specific jars.
+For IBM MQ 8.0.0.5, copy the following jars to the **<Machine_Agent_Dir>\WMBMonitor\lib** directory. 
 
 ```
-    CL3Export.jar
-    CL3Nonexport.jar
-    com.ibm.mq.axis2.jar
-    com.ibm.mq.commonservices.jar
-    com.ibm.mq.defaultconfig.jar
-    com.ibm.mq.headers.jar
-    com.ibm.mq.jar
-    com.ibm.mq.jmqi.jar
-    com.ibm.mq.jms.Nojndi.jar
-    com.ibm.mq.pcf.jar
-    com.ibm.mq.postcard.jar
-    com.ibm.mq.soap.jar
-    com.ibm.mq.tools.ras.jar
-    com.ibm.mqjms.jar
-    connector.jar
-    dhbcore.jar
+	com.ibm.mq.allclient.jar
+    com.ibm.mq.traceControl.jar
     fscontext.jar
-    jms.jar
-    jndi.jar
-    jta.jar
-    ldap.jar
     providerutil.jar
-    rmm.jar
 ```
 
 
@@ -58,7 +40,8 @@ Rebuilding the Project
 ----------------------
 
 1. Clone the repo ibm-websphere-msg-broker-monitor from GitHub https://github.com/Appdynamics
-2. Copy all the jar files from the **<IBM_INSTALL_DIR>\WebSphere MQ\java\lib** directory or its equivalent on Unix  directory to the **<Machine_Agent_Dir>\WMBMonitor\lib**. 
+2. Copy all the required jar files from your IBM MQ installation directory to the **<Machine_Agent_Dir>\WMBMonitor\lib**.
+   For IBM MQ 8.0.0.5, the required jars can be found in **<IBM_MQ_INSTALL_DIR>\java\lib**
    Create a lib folder if not already present.
 3. Run 'mvn clean install' from the cloned ibm-websphere-msg-broker-monitor directory.
 4. The WMBMonitor-<version>.zip should get built and found in the 'target' directory.

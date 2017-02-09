@@ -13,7 +13,7 @@
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
         <target.dir>${project.build.directory}/WMBMonitor</target.dir>
         <lib.dir>${basedir}/lib</lib.dir>
-        <ibm.mq.lib.version>7.5.2</ibm.mq.lib.version>
+        <ibm.mq.lib.version>8.0.0</ibm.mq.lib.version>
     </properties>
 
     <dependencies>
@@ -52,6 +52,20 @@
             <version>2.2.7</version>
         </dependency>
         <dependency>
+            <groupId>com.ibm.mq.allclient</groupId>
+            <artifactId>com.ibm.mq.allclient</artifactId>
+            <scope>system</scope>
+            <version>${ibm.mq.lib.version}</version>
+            <systemPath>${lib.dir}/com.ibm.mq.allclient.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.ibm.mq.traceControl</groupId>
+            <artifactId>com.ibm.mq.traceControl</artifactId>
+            <scope>system</scope>
+            <version>${ibm.mq.lib.version}</version>
+            <systemPath>${lib.dir}/com.ibm.mq.traceControl.jar</systemPath>
+        </dependency>
+        <dependency>
             <groupId>jms</groupId>
             <artifactId>jms</artifactId>
             <scope>system</scope>
@@ -59,11 +73,23 @@
             <systemPath>${lib.dir}/jms.jar</systemPath>
         </dependency>
         <dependency>
-            <groupId>com.ibm.mqjms</groupId>
-            <artifactId>com.ibm.mqjms</artifactId>
+            <groupId>providerutil</groupId>
+            <artifactId>providerutil</artifactId>
             <scope>system</scope>
             <version>${ibm.mq.lib.version}</version>
-            <systemPath>${lib.dir}/com.ibm.mqjms.jar</systemPath>
+            <systemPath>${lib.dir}/providerutil.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>fscontext</groupId>
+            <artifactId>fscontext</artifactId>
+            <scope>system</scope>
+            <version>${ibm.mq.lib.version}</version>
+            <systemPath>${lib.dir}/fscontext.jar</systemPath>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.commons</groupId>
+        	<artifactId>commons-lang3</artifactId>
+        	<version>3.5</version>
         </dependency>
     </dependencies>
     <build>
@@ -142,7 +168,7 @@
                                     <fileset dir="src/main/resources/conf" includes="config.yml"/>
                                 </copy>
                                 <copy todir="${target.dir}">
-                                    <fileset dir="${build.directory}" includes="${project.artifactId}.${project.packaging}"/>
+                                    <fileset dir="${project.build.directory}" includes="${project.artifactId}.${project.packaging}"/>
                                 </copy>
                                 <zip destfile="${target.dir}-${project.version}.zip">
                                     <zipfileset dir="${target.dir}" filemode="755" prefix="WMBMonitor/"/>
