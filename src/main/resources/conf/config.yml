@@ -38,6 +38,9 @@ queueManagers:
         - name: "$SYS/Broker/+/StatisticsAccounting/SnapShot/#/#"
           subscriberName: "allFlowStatistics"
 
+    #For flow metrics, all the fields listed in this section will be reported as metrics.
+    #Available fields:
+    #https://www.ibm.com/support/knowledgecenter/en/SSMKHH_10.0.0/com.ibm.etools.mft.doc/ac19020_.htm
     flowMetricFields:
       messageFlowFields:
         - TotalElapsedTime
@@ -82,7 +85,8 @@ queueManagers:
         - NumberOfOutputTerminals
       terminalFields:
         - CountOfInvocations
-
+    
+    #Some derived fields are available for flow metrics.
     derivedFlowMetricFields:
       messageFlowFields:
         - AverageElapsedTime
