@@ -10,7 +10,7 @@ in heterogeneous IT environments for businesses of any size, in any industry and
 
 This extension extracts resource and message flow statistics. The list of metrics that it extracts can be found here:
 
-https://www-01.ibm.com/support/knowledgecenter/SSMKHH_10.0.0/com.ibm.etools.mft.doc/bn43250_.htm
+https://www.ibm.com/support/knowledgecenter/SSMKHH_10.0.0/com.ibm.etools.mft.doc/bn43250_.htm
 https://www.ibm.com/support/knowledgecenter/en/SSMKHH_10.0.0/com.ibm.etools.mft.doc/ac19020_.htm
 
 Prerequisites
@@ -40,7 +40,7 @@ Rebuilding the Project
 ----------------------
 
 1. Clone the repo ibm-websphere-msg-broker-monitor from GitHub: https://github.com/Appdynamics
-2. Create a *lib* folder in the cloned repository and insert all the required jar files from your IBM MQ installation directory.
+2. Copy all the required jar files from your IBM MQ installation directory to the *lib* folder in the cloned repository.
    For IBM MQ 8.0.0.5, the required jars can be found in *<IBM_MQ_INSTALL_DIR>/java/lib*.
 3. Run `mvn clean install -Pmq8` for MQ version 8.X (default) or `mvn clean install -Pmq7.5` for MQ version 7.5.
 4. The *WMBMonitor-<version>.zip* should get built and found in the *target* directory.
@@ -103,7 +103,7 @@ There are two configurations needed:
     Similarly, snapshot statistics for message flows get published every 20 seconds to the corresponding topic *$SYS/Broker/+/StatisticsAccounting/SnapShot/application/messageflow*.
           
     For more details, please follow the IBM documentation:  
-    http://www-01.ibm.com/support/knowledgecenter/SSMKHH_10.0.0/com.ibm.etools.mft.doc/aq20080_.htm
+    http://www.ibm.com/support/knowledgecenter/SSMKHH_10.0.0/com.ibm.etools.mft.doc/aq20080_.htm
     
     The extension subscribes to a particular topic in a queue manager's queue. Please confirm that you have all of the following in the IBM WebSphere MQ explorer:
         
@@ -298,8 +298,8 @@ Find out more in the [AppDynamics Exchange][].
 For any questions or feature request, please contact [AppDynamics Center of Excellence][].
 
 **Version:** 3.0.0
-**Controller Compatibility:** 4.0+
-**IBM WebSphere Message Broker Version Tested On:** 8.0.0.0
+**Controller Compatibility:** 4.2+
+**IBM WebSphere Message Broker Version Tested On:** 8.0.0.4
 
 [Github]: https://github.com/Appdynamics/ibm-websphere-msg-broker-monitor
 [AppDynamics Exchange]: http://community.appdynamics.com/t5/AppDynamics-eXchange/idb-p/extensions
