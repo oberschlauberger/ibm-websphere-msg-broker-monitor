@@ -65,7 +65,63 @@ public class StatsProcessorTest {
 		getResourceSubscriberFromProcessor(processor).onMessage(mockMsg);
 		verify(writer, never()).printMetric(metricPathCaptor.capture(), valueCaptor.capture(), anyString(), anyString(),
 				anyString());
-	}	
+	}
+	
+	@Test
+	public void shouldNotThrowErrorWhenSomeFieldsAreNotConfigured () throws IOException, JMSException, JAXBException {
+		// Prepare mock objects
+		MetricWriteHelper writer = mock(MetricWriteHelper.class);
+		MetricPrinter printer = new MetricPrinter("Custom Metrics|WMB", "QMgr1", writer);
+		TextMessage mockMsg = mock(TextMessage.class);
+		when(mockMsg.getText()).thenReturn(getFileContents("/flowStats.xml"));
+		
+		// Prepare config where some fields are not configured / null
+		Map configMap = YmlReader
+				.readFromFileAsMap(new File(this.getClass().getResource("/conf/configWithNullFields.yml").getFile()));
+		List<Map> qMgrs = (List<Map>) configMap.get("queueManagers");
+		Map qMgrConfig = qMgrs.get(0);
+		
+		// Create processor with this configuration
+		StatsProcessor processor = new StatsProcessor(qMgrConfig, parserFactory.getResourceStatisticsParser(),
+				parserFactory.getFlowStatisticsParser(), printer);
+		
+		// Feed flow stats to processor
+		getFlowSubscriberFromProcessor(processor).onMessage(mockMsg);
+		
+		// See that metrics are written despite the config
+		ArgumentCaptor<String> metricPathCaptor = ArgumentCaptor.forClass(String.class);
+		ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
+		verify(writer, atLeastOnce()).printMetric(metricPathCaptor.capture(), valueCaptor.capture(), anyString(),
+				anyString(), anyString());
+	}
+	
+	@Test
+	public void shouldNotThrowErrorWhenNoFlowMetricFieldsAreConfigured () throws IOException, JMSException, JAXBException {
+		// Prepare mock objects
+		MetricWriteHelper writer = mock(MetricWriteHelper.class);
+		MetricPrinter printer = new MetricPrinter("Custom Metrics|WMB", "QMgr1", writer);
+		TextMessage mockMsg = mock(TextMessage.class);
+		when(mockMsg.getText()).thenReturn(getFileContents("/flowStats.xml"));
+		
+		// Prepare config where no flow fields are configured / all null
+		Map configMap = YmlReader
+				.readFromFileAsMap(new File(this.getClass().getResource("/conf/configWithNoFlowFieldsConfigured.yml").getFile()));
+		List<Map> qMgrs = (List<Map>) configMap.get("queueManagers");
+		Map qMgrConfig = qMgrs.get(0);
+		
+		// Create processor with this configuration
+		StatsProcessor processor = new StatsProcessor(qMgrConfig, parserFactory.getResourceStatisticsParser(),
+				parserFactory.getFlowStatisticsParser(), printer);
+		
+		// Feed flow stats to processor
+		getFlowSubscriberFromProcessor(processor).onMessage(mockMsg);
+		
+		// See that no metrics are written
+		ArgumentCaptor<String> metricPathCaptor = ArgumentCaptor.forClass(String.class);
+		ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
+		verify(writer, never()).printMetric(metricPathCaptor.capture(), valueCaptor.capture(), anyString(),
+				anyString(), anyString());
+	}
 
 	private String getFileContents(String filepath) throws IOException {
 		String filename = this.getClass().getResource(filepath).getFile();

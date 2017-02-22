@@ -56,45 +56,14 @@ queueManagers:
         - TotalNumberOfTimeOutsWaitingForRepliesToAggregateMessages
         - TotalNumberOfCommits
         - TotalNumberOfBackouts
-      threadFields: 
-        - Number
-        - TotalNumberOfInputMessages
-        - TotalElapsedTime
-        - TotalCPUTime
-        - CPUTimeWaitingForInputMessage
-        - ElapsedTimeWaitingForInputMessage
-        - TotalSizeOfInputMessages
-        - MaximumSizeOfInputMessages
-        - MinimumSizeOfInputMessages
+      threadFields:
       nodeFields:
-        - TotalElapsedTime
-        - MaximumElapsedTime
-        - MinimumElapsedTime
-        - TotalCPUTime
-        - MaximumCPUTime
-        - MinimumCPUTime
-        - CountOfInvocations
-        - NumberOfInputTerminals
-        - NumberOfOutputTerminals
       terminalFields:
-        - CountOfInvocations
 
+    #Some derived fields are available for flow metrics.
     derivedFlowMetricFields:
       messageFlowFields:
-        - AverageElapsedTime
-        - AverageCPUTime
-        - AverageCPUTimeWaitingForInputMessage
-        - AverageElapsedTimeWaitingForInputMessage
-        - AverageSizeOfInputMessages
       threadFields:
-        - AverageElapsedTime
-        - AverageCPUTime
-        - AverageCPUTimeWaitingForInputMessage
-        - AverageElapsedTimeWaitingForInputMessage
-        - AverageSizeOfInputMessages
       nodeFields:
-        - AverageElapsedTime
-        - AverageCPUTime
-        - AverageSizeOfInputMessages
 
 numberOfThreads: 10

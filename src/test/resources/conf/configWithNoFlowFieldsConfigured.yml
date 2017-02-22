@@ -36,65 +36,13 @@ queueManagers:
 
     flowMetricFields:
       messageFlowFields:
-        - TotalElapsedTime
-        - MaximumElapsedTime
-        - MinimumElapsedTime
-        - TotalCPUTime
-        - MaximumCPUTime
-        - MinimumCPUTime
-        - CPUTimeWaitingForInputMessage
-        - ElapsedTimeWaitingForInputMessage
-        - TotalInputMessages
-        - TotalSizeOfInputMessages
-        - MaximumSizeOfInputMessages
-        - MinimumSizeOfInputMessages
-        - NumberOfThreadsInPool
-        - TimesMaximumNumberofThreadsReached
-        - TotalNumberOfMQErrors
-        - TotalNumberOfMessagesWithErrors
-        - TotalNumberOfErrorsProcessingMessages
-        - TotalNumberOfTimeOutsWaitingForRepliesToAggregateMessages
-        - TotalNumberOfCommits
-        - TotalNumberOfBackouts
-      threadFields: 
-        - Number
-        - TotalNumberOfInputMessages
-        - TotalElapsedTime
-        - TotalCPUTime
-        - CPUTimeWaitingForInputMessage
-        - ElapsedTimeWaitingForInputMessage
-        - TotalSizeOfInputMessages
-        - MaximumSizeOfInputMessages
-        - MinimumSizeOfInputMessages
+      threadFields:
       nodeFields:
-        - TotalElapsedTime
-        - MaximumElapsedTime
-        - MinimumElapsedTime
-        - TotalCPUTime
-        - MaximumCPUTime
-        - MinimumCPUTime
-        - CountOfInvocations
-        - NumberOfInputTerminals
-        - NumberOfOutputTerminals
       terminalFields:
-        - CountOfInvocations
 
     derivedFlowMetricFields:
       messageFlowFields:
-        - AverageElapsedTime
-        - AverageCPUTime
-        - AverageCPUTimeWaitingForInputMessage
-        - AverageElapsedTimeWaitingForInputMessage
-        - AverageSizeOfInputMessages
       threadFields:
-        - AverageElapsedTime
-        - AverageCPUTime
-        - AverageCPUTimeWaitingForInputMessage
-        - AverageElapsedTimeWaitingForInputMessage
-        - AverageSizeOfInputMessages
       nodeFields:
-        - AverageElapsedTime
-        - AverageCPUTime
-        - AverageSizeOfInputMessages
 
 numberOfThreads: 10

@@ -5,16 +5,8 @@ import static com.appdynamics.extensions.wmb.Util.convertToString;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
@@ -43,9 +35,7 @@ import com.appdynamics.extensions.wmb.metrics.MetricValueTransformer;
 import com.appdynamics.extensions.wmb.resourcestats.ResourceIdentifier;
 import com.appdynamics.extensions.wmb.resourcestats.ResourceStatistics;
 import com.appdynamics.extensions.wmb.resourcestats.ResourceType;
-import com.google.common.collect.ImmutableSet;
 import com.singularity.ee.agent.systemagent.api.MetricWriter;
-import com.singularity.ee.util.logging.SysOutLogger;
 
 public class StatsProcessor {
 
@@ -68,9 +58,9 @@ public class StatsProcessor {
 		this.printer = printer;
 		this.resourceStatsParser = resourceStatsParser;
 		this.flowStatsParser = flowStatsParser;
-		
+
 		defaultMetricProps = new DefaultMetricProperties();
-		sumAggregationMetricProps = new DefaultMetricProperties();				
+		sumAggregationMetricProps = new DefaultMetricProperties();
 		sumAggregationMetricProps.setAggregationType(MetricWriter.METRIC_AGGREGATION_TYPE_SUM);
 		sumAggregationMetricProps.setTimeRollupType(MetricWriter.METRIC_TIME_ROLLUP_TYPE_SUM);
 	}
@@ -148,8 +138,8 @@ public class StatsProcessor {
 						try {
 							FlowStatistics flowStatistics = flowStatsParser.parse(text);
 							if (flowStatistics != null) {
-									List<Metric> metrics = buildFlowMetrics(flowStatistics);
-									printer.reportMetrics(metrics);
+								List<Metric> metrics = buildFlowMetrics(flowStatistics);
+								printer.reportMetrics(metrics);
 							}
 						} catch (JAXBException e) {
 							logger.error("Unable to unmarshal XML message {}", text, e);
@@ -164,7 +154,7 @@ public class StatsProcessor {
 						Long.toString(System.currentTimeMillis() - startTime));
 			} catch (Exception e) {
 				logger.error("Something unforeseen has happened..", e);
-			}			
+			}
 		}
 	}
 
@@ -182,9 +172,9 @@ public class StatsProcessor {
 							for (QName key : resourceIdentifier.getAttributes().keySet()) {
 								String value = resourceIdentifier.getAttributes().get(key);
 								String metricPath = formMetricPath(Arrays.asList(brokerName, executionGroupName,
-										"Resource Statistics", resourceTypeName, resourceIdName));								
+										"Resource Statistics", resourceTypeName, resourceIdName));
 								MetricProperties metricProps = new DefaultMetricProperties();
-								Metric metricPoint = createMetricPoint(metricPath, value, metricProps, key.toString());								
+								Metric metricPoint = createMetricPoint(metricPath, value, metricProps, key.toString());
 								if (null != metricPoint) {
 									metrics.add(metricPoint);
 								}
@@ -198,188 +188,205 @@ public class StatsProcessor {
 	}
 
 	private List<Metric> buildFlowMetrics(FlowStatistics flowStatistics) {
-		
+
 		final List<Metric> metrics = new ArrayList<Metric>();
 
-		if (flowStatistics != null) {
-			
+		if (null != flowStatistics) {
+
 			Map enabledFields = (Map) config.get("flowMetricFields");
-			Map derivedFields = (Map) config.get("derivedFlowMetricFields");			
-						
+			Map derivedFields = (Map) config.get("derivedFlowMetricFields");
+
 			List messageFlowFields = (List) enabledFields.get("messageFlowFields");
 			List messageFlowDerivedFields = (List) derivedFields.get("messageFlowFields");
 			MessageFlow messageFlow = flowStatistics.getMessageFlow();
-			
-			if (null != messageFlow && null != messageFlowFields) {				
-						
+
+			if (null != messageFlow) {
+
 				String brokerName = messageFlow.getAttributes().get(new QName("BrokerLabel"));
 				String executionGroupName = messageFlow.getAttributes().get(new QName("ExecutionGroupName"));
 				String applicationName = messageFlow.getAttributes().get(new QName("ApplicationName"));
 				String flowName = messageFlow.getAttributes().get(new QName("MessageFlowName"));
 
 				// Metric Path:
-				// <prefix>|<broker>|<execution group>|Message Flow Statistics|<application>|<message flow>|<metric name>
+				// <prefix>|<broker>|<execution group>|Message Flow
+				// Statistics|<application>|<message flow>|<metric name>
 				// "Execution Group" is also called "Integration Server"
-				String metricBasePath = formMetricPath(
-						Arrays.asList(brokerName, executionGroupName, "Message Flow Statistics", applicationName, flowName));			
-				
-				// Message Flow Metrics				
-				for (Object field: messageFlowFields) {
-					
-					try {
-						
-						String metricName = (String) field;
-						QName key = new QName(metricName);
-						
-						if (messageFlow.getAttributes().containsKey(key)) {
-							
-							String metricValue = messageFlow.getAttributes().get(key);					
-							
-							MetricProperties metricProps = metricName.startsWith("Total")
-									|| metricName.equals("ElapsedTimeWaitingForInputMessage")
-									|| metricName.equals("TimesMaximumNumberOfThreadsReached")
-									? sumAggregationMetricProps : defaultMetricProps;
+				String metricBasePath = formMetricPath(Arrays.asList(brokerName, executionGroupName,
+						"Message Flow Statistics", applicationName, flowName));
 
-							Metric metricPoint = createMetricPoint(metricBasePath, metricValue, metricProps, metricName);
-							
-							if (metricPoint != null) {
+				// Message Flow Metrics
+				if (null != messageFlowFields) {
+					for (Object field : messageFlowFields) {
+
+						try {
+
+							String metricName = (String) field;
+							QName key = new QName(metricName);
+
+							if (messageFlow.getAttributes().containsKey(key)) {
+
+								String metricValue = messageFlow.getAttributes().get(key);
+
+								MetricProperties metricProps = metricName.startsWith("Total")
+										|| metricName.equals("ElapsedTimeWaitingForInputMessage")
+										|| metricName.equals("TimesMaximumNumberOfThreadsReached")
+												? sumAggregationMetricProps : defaultMetricProps;
+
+								Metric metricPoint = createMetricPoint(metricBasePath, metricValue, metricProps,
+										metricName);
+
+								if (metricPoint != null) {
+									metrics.add(metricPoint);
+								}
+							}
+						} catch (ClassCastException e) {
+							logger.error("Configuration Error: Could not parse a \"Message Flow\" field");
+						}
+					}
+				}
+
+				// Derived Message Flow Metrics
+				if (null != messageFlowDerivedFields) {
+					for (Object field : messageFlowDerivedFields) {
+
+						String metricName = null;
+
+						try {
+							metricName = (String) field;
+							DerivedField derivedField = DerivedField.valueOf(metricName);
+
+							Metric metricPoint = null;
+
+							switch (derivedField) {
+							case AverageElapsedTime:
+								metricPoint = createFractionMetricPoint(messageFlow.getAttributes(), "TotalElapsedTime",
+										"TotalInputMessages", "AverageElapsedTime", metricBasePath);
+								break;
+							case AverageCPUTime:
+								metricPoint = createFractionMetricPoint(messageFlow.getAttributes(), "TotalCPUTime",
+										"TotalInputMessages", "AverageCPUTime", metricBasePath);
+								break;
+							case AverageCPUTimeWaitingForInputMessage:
+								metricPoint = createFractionMetricPoint(messageFlow.getAttributes(),
+										"CPUTimeWaitingForInputMessage", "TotalInputMessages",
+										"AverageCPUTimeWaitingForInputMessage", metricBasePath);
+								break;
+							case AverageElapsedTimeWaitingForInputMessage:
+								metricPoint = createFractionMetricPoint(messageFlow.getAttributes(),
+										"ElapsedTimeWaitingForInputMessage", "TotalInputMessages",
+										"AverageElapsedTimeWaitingForInputMessage", metricBasePath);
+								break;
+							case AverageSizeOfInputMessages:
+								metricPoint = createFractionMetricPoint(messageFlow.getAttributes(),
+										"TotalSizeOfInputMessages", "TotalInputMessages", "AverageSizeOfInputMessages",
+										metricBasePath);
+								break;
+							default:
+								break;
+							}
+
+							if (null != metricPoint) {
 								metrics.add(metricPoint);
 							}
-						}	
-					} catch (ClassCastException e) {
-						logger.error("Configuration Error: Could not parse a \"Message Flow\" field");
-					}							
-				}
-				
-				for (Object field: messageFlowDerivedFields) {
-					
-					String metricName = null;
-					
-					try {						
-						metricName = (String) field;
-						DerivedField derivedField = DerivedField.valueOf(metricName);				
-						
-						Metric metricPoint = null;
-						
-						switch (derivedField) {						
-						case AverageElapsedTime:
-							metricPoint = createFractionMetricPoint(messageFlow.getAttributes(),
-									"TotalElapsedTime", "TotalInputMessages", "AverageElapsedTime", metricBasePath);
-							break;							
-						case AverageCPUTime:
-							metricPoint = createFractionMetricPoint(messageFlow.getAttributes(),
-									"TotalCPUTime", "TotalInputMessages", "AverageCPUTime", metricBasePath);
-							break;
-						case AverageCPUTimeWaitingForInputMessage:
-							metricPoint = createFractionMetricPoint(messageFlow.getAttributes(),
-									"CPUTimeWaitingForInputMessage", "TotalInputMessages",
-									"AverageCPUTimeWaitingForInputMessage", metricBasePath);
-							break;
-						case AverageElapsedTimeWaitingForInputMessage:
-							metricPoint = createFractionMetricPoint(messageFlow.getAttributes(),
-									"ElapsedTimeWaitingForInputMessage", "TotalInputMessages",
-									"AverageElapsedTimeWaitingForInputMessage", metricBasePath);
-							break;
-						case AverageSizeOfInputMessages:
-							metricPoint = createFractionMetricPoint(messageFlow.getAttributes(),
-									"TotalSizeOfInputMessages", "TotalInputMessages", "AverageSizeOfInputMessages", metricBasePath);
-							break;
-						default:
-							break;
+						} catch (ClassCastException e) {
+							logger.error("Configuration Error: Could not parse a derived \"Message Flow\" field");
+						} catch (IllegalArgumentException e) {
+							logger.error("Configuration Error: Derived \"Message Flow\" field \"" + metricName
+									+ "\" is invalid");
 						}
-						
-						if (null != metricPoint) {
-							metrics.add(metricPoint);
-						}
-					} catch (ClassCastException e) {
-						logger.error("Configuration Error: Could not parse a derived \"Message Flow\" field");
-					} catch (IllegalArgumentException e) {
-						logger.error("Configuration Error: Derived \"Message Flow\" field \"" + metricName + "\" is invalid");
 					}
-				}	
+				}
 
 				// Thread Metrics
 				List<Thread> threads = flowStatistics.getThreadStatistics();
 				List threadFields = (List) enabledFields.get("threadFields");
 				List threadDerivedFields = (List) derivedFields.get("threadFields");
-				
+
 				if (null != threads && null != threadFields) {
-					
-					for (Thread thread: threads) {
-						
+
+					for (Thread thread : threads) {
+
 						String threadNumber = thread.getAttributes().get(new QName("Number"));
 						String metricPath = metricBasePath + "|Threads|" + threadNumber;
-						
-						for (Object field: threadFields) {							
-							
-							try {
-								
-								String metricName = (String) field;
-								QName key = new QName(metricName);
-								
-								if (thread.getAttributes().containsKey(key)) {
-									
-									String metricValue = thread.getAttributes().get(key);										
-									
-									MetricProperties metricProps = key.toString().startsWith("Total")
-										|| key.toString().equals("ElapsedTimeWaitingForInputMessage")
-										? sumAggregationMetricProps : defaultMetricProps;
-									
-									Metric metricPoint = createMetricPoint(metricPath, metricValue, metricProps, metricName);
-									
-									if (metricPoint != null) {
+
+						if (null != threadFields) {
+							for (Object field : threadFields) {
+
+								try {
+
+									String metricName = (String) field;
+									QName key = new QName(metricName);
+
+									if (thread.getAttributes().containsKey(key)) {
+
+										String metricValue = thread.getAttributes().get(key);
+
+										MetricProperties metricProps = key.toString().startsWith("Total")
+												|| key.toString().equals("ElapsedTimeWaitingForInputMessage")
+														? sumAggregationMetricProps : defaultMetricProps;
+
+										Metric metricPoint = createMetricPoint(metricPath, metricValue, metricProps,
+												metricName);
+
+										if (metricPoint != null) {
+											metrics.add(metricPoint);
+										}
+									}
+								} catch (ClassCastException e) {
+									logger.error("Configuration Error: Could not parse a \"Thread\" field");
+								}
+							}
+						}
+
+						if (null != threadDerivedFields) {
+							for (Object field : threadDerivedFields) {
+
+								String metricName = null;
+
+								try {
+									metricName = (String) field;
+									DerivedField derivedField = DerivedField.valueOf(metricName);
+
+									Metric metricPoint = null;
+
+									switch (derivedField) {
+									case AverageElapsedTime:
+										metricPoint = createFractionMetricPoint(thread.getAttributes(),
+												"TotalElapsedTime", "TotalNumberOfInputMessages", "AverageElapsedTime",
+												metricPath);
+										break;
+									case AverageCPUTime:
+										metricPoint = createFractionMetricPoint(thread.getAttributes(), "TotalCPUTime",
+												"TotalNumberOfInputMessages", "AverageCPUTime", metricPath);
+										break;
+									case AverageCPUTimeWaitingForInputMessage:
+										metricPoint = createFractionMetricPoint(thread.getAttributes(),
+												"CPUTimeWaitingForInputMessage", "TotalNumberOfInputMessages",
+												"AverageCPUTimeWaitingForInputMessage", metricPath);
+										break;
+									case AverageElapsedTimeWaitingForInputMessage:
+										metricPoint = createFractionMetricPoint(thread.getAttributes(),
+												"ElapsedTimeWaitingForInputMessage", "TotalNumberOfInputMessages",
+												"AverageElapsedTimeWaitingForInputMessage", metricPath);
+										break;
+									case AverageSizeOfInputMessages:
+										metricPoint = createFractionMetricPoint(thread.getAttributes(),
+												"TotalSizeOfInputMessages", "TotalNumberOfInputMessages",
+												"AverageSizeOfInputMessages", metricPath);
+										break;
+									default:
+										break;
+									}
+
+									if (null != metricPoint) {
 										metrics.add(metricPoint);
 									}
+								} catch (ClassCastException e) {
+									logger.error("Configuration Error: Could not parse a derived \"Thread\" field");
+								} catch (IllegalArgumentException e) {
+									logger.error("Configuration Error: Derived \"Thread\" field \"" + metricName
+											+ "\" is invalid");
 								}
-							} catch (ClassCastException e) {
-								logger.error("Configuration Error: Could not parse a \"Thread\" field");
-							}							
-						}
-						
-						for (Object field: threadDerivedFields) {
-							
-							String metricName = null;
-							
-							try {						
-								metricName = (String) field;
-								DerivedField derivedField = DerivedField.valueOf(metricName);				
-								
-								Metric metricPoint = null;
-								
-								switch (derivedField) {						
-								case AverageElapsedTime:
-									metricPoint = createFractionMetricPoint(thread.getAttributes(),
-											"TotalElapsedTime", "TotalNumberOfInputMessages", "AverageElapsedTime", metricPath);
-									break;							
-								case AverageCPUTime:
-									metricPoint = createFractionMetricPoint(thread.getAttributes(),
-											"TotalCPUTime", "TotalNumberOfInputMessages", "AverageCPUTime", metricPath);
-									break;
-								case AverageCPUTimeWaitingForInputMessage:
-									metricPoint = createFractionMetricPoint(thread.getAttributes(),
-											"CPUTimeWaitingForInputMessage", "TotalNumberOfInputMessages",
-											"AverageCPUTimeWaitingForInputMessage", metricPath);
-									break;
-								case AverageElapsedTimeWaitingForInputMessage:
-									metricPoint = createFractionMetricPoint(thread.getAttributes(),
-											"ElapsedTimeWaitingForInputMessage", "TotalNumberOfInputMessages",
-											"AverageElapsedTimeWaitingForInputMessage", metricPath);
-									break;
-								case AverageSizeOfInputMessages:
-									metricPoint = createFractionMetricPoint(thread.getAttributes(),
-											"TotalSizeOfInputMessages", "TotalNumberOfInputMessages", "AverageSizeOfInputMessages", metricPath);
-									break;
-								default:
-									break;
-								}
-								
-								if (null != metricPoint) {
-									metrics.add(metricPoint);
-								}
-							} catch (ClassCastException e) {
-								logger.error("Configuration Error: Could not parse a derived \"Thread\" field");
-							} catch (IllegalArgumentException e) {
-								logger.error("Configuration Error: Derived \"Thread\" field \"" + metricName + "\" is invalid");
 							}
 						}
 					}
@@ -389,90 +396,101 @@ public class StatsProcessor {
 				List<Node> nodes = flowStatistics.getNodeStatistics();
 				List nodeFields = (List) enabledFields.get("nodeFields");
 				List nodeDerivedFields = (List) derivedFields.get("nodeFields");
-				
+
 				if (null != nodes && null != nodeFields) {
 					for (Node node : nodes) {
-						
+
 						String nodeLabel = node.getAttributes().get(new QName("Label"));
 						String nodeType = node.getAttributes().get(new QName("Type"));
 						String metricPath = metricBasePath + "|Nodes|" + nodeLabel + " (" + nodeType + ")";
 
-						for (Object field: nodeFields) {							
-							
-							try {
-								
-								String metricName = (String) field;								
-								QName key = new QName(metricName);
-								
-								if (node.getAttributes().containsKey(key)) {
-									
-									String metricValue = node.getAttributes().get(key);
-									
-									MetricProperties metricProps = key.toString().startsWith("Total")
-											|| key.toString().equals("CountOfInvocations")
-											? sumAggregationMetricProps : defaultMetricProps;
-									
-									Metric metricPoint = createMetricPoint(metricPath, metricValue, metricProps, key.toString());
-									
-									if (metricPoint != null) {
+						if (null != nodeFields) {
+							for (Object field : nodeFields) {
+
+								try {
+
+									String metricName = (String) field;
+									QName key = new QName(metricName);
+
+									if (node.getAttributes().containsKey(key)) {
+
+										String metricValue = node.getAttributes().get(key);
+
+										MetricProperties metricProps = key.toString().startsWith("Total")
+												|| key.toString().equals("CountOfInvocations")
+														? sumAggregationMetricProps : defaultMetricProps;
+
+										Metric metricPoint = createMetricPoint(metricPath, metricValue, metricProps,
+												key.toString());
+
+										if (metricPoint != null) {
+											metrics.add(metricPoint);
+										}
+									}
+								} catch (ClassCastException e) {
+									logger.error("Configuration Error: Could not parse a \"Node\" field");
+								}
+							}
+
+						}
+
+						if (null != nodeDerivedFields) {
+							for (Object field : nodeDerivedFields) {
+
+								String metricName = null;
+
+								try {
+									metricName = (String) field;
+									DerivedField derivedField = DerivedField.valueOf(metricName);
+
+									Metric metricPoint = null;
+
+									switch (derivedField) {
+									case AverageElapsedTime:
+										metricPoint = createFractionMetricPoint(node.getAttributes(),
+												"TotalElapsedTime", "CountOfInvocations", "AverageElapsedTime",
+												metricPath);
+										break;
+									case AverageCPUTime:
+										metricPoint = createFractionMetricPoint(node.getAttributes(), "TotalCPUTime",
+												"CountOfInvocations", "AverageCPUTime", metricPath);
+										break;
+									default:
+										break;
+									}
+
+									if (null != metricPoint) {
 										metrics.add(metricPoint);
 									}
+								} catch (ClassCastException e) {
+									logger.error("Configuration Error: Could not parse a derived \"Node\" field");
+								} catch (IllegalArgumentException e) {
+									logger.error("Configuration Error: Derived \"Node\" field \"" + metricName
+											+ "\" is invalid");
 								}
-							} catch (ClassCastException e) {
-								logger.error("Configuration Error: Could not parse a \"Node\" field");
-							}							
-						}
-						
-						for (Object field: nodeDerivedFields) {
-							
-							String metricName = null;
-							
-							try {						
-								metricName = (String) field;
-								DerivedField derivedField = DerivedField.valueOf(metricName);				
-								
-								Metric metricPoint = null;
-								
-								switch (derivedField) {						
-								case AverageElapsedTime:
-									metricPoint = createFractionMetricPoint(node.getAttributes(),
-											"TotalElapsedTime", "CountOfInvocations", "AverageElapsedTime", metricPath);
-									break;							
-								case AverageCPUTime:
-									metricPoint = createFractionMetricPoint(node.getAttributes(),
-											"TotalCPUTime", "CountOfInvocations", "AverageCPUTime", metricPath);
-									break;
-								default:
-									break;
-								}
-								
-								if (null != metricPoint) {
-									metrics.add(metricPoint);
-								}
-							} catch (ClassCastException e) {
-								logger.error("Configuration Error: Could not parse a derived \"Node\" field");
-							} catch (IllegalArgumentException e) {
-								logger.error("Configuration Error: Derived \"Node\" field \"" + metricName + "\" is invalid");
 							}
 						}
 
-						// Terminal Metrics, only relevant attribute is "CountOfInvocations"
+						// Terminal Metrics, only relevant attribute is
+						// "CountOfInvocations"
 						List<Terminal> terminals = node.getTerminalStatistics();
-						List terminalFields = (List) enabledFields.get("terminalFields");	
-						
-						if (null != terminals && null != terminalFields && terminalFields.contains("CountOfInvocations")) {
-							
+						List terminalFields = (List) enabledFields.get("terminalFields");
+
+						if (null != terminals && null != terminalFields
+								&& terminalFields.contains("CountOfInvocations")) {
+
 							for (Terminal terminal : terminals) {
-								
+
 								String terminalLabel = terminal.getAttributes().get(new QName("Label"));
 								String terminalType = terminal.getAttributes().get(new QName("Type"));
 
 								String metricValue = terminal.getAttributes().get("CountOfInvocations");
-								metricPath = metricBasePath
-										+ "|Nodes|Terminals|" + terminalLabel + " (" + terminalType + ")";
+								metricPath = metricBasePath + "|Nodes|Terminals|" + terminalLabel + " (" + terminalType
+										+ ")";
 
-								Metric metricPoint = createMetricPoint(metricPath, metricValue, sumAggregationMetricProps, "CountOfInvocations");
-								
+								Metric metricPoint = createMetricPoint(metricPath, metricValue,
+										sumAggregationMetricProps, "CountOfInvocations");
+
 								metrics.add(metricPoint);
 							}
 						}
@@ -480,15 +498,15 @@ public class StatsProcessor {
 				}
 			}
 		}
-		
+
 		return metrics;
 	}
-	
+
 	private Metric createMetricPoint(String path, String value, MetricProperties properties, String name) {
 		BigDecimal decimalValue = valueTransformer.transform(path, value, properties);
 
 		String processedName = StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(name), " ");
-		
+
 		if (decimalValue != null) {
 			Metric m = new Metric();
 			m.setMetricName(processedName);
@@ -501,19 +519,20 @@ public class StatsProcessor {
 			return null;
 		}
 	}
-	
-	private Metric createFractionMetricPoint(Map<QName,String> attributes, String numeratorName, String denominatorName, String metricName, String metricBasePath) {
+
+	private Metric createFractionMetricPoint(Map<QName, String> attributes, String numeratorName,
+			String denominatorName, String metricName, String metricBasePath) {
 		Long numerator = new Long(attributes.get(new QName(numeratorName)));
 		Long denominator = new Long(attributes.get(new QName(denominatorName)));
-		
+
 		Long factionValue;
-		
+
 		if (denominator == 0) {
 			return null;
 		} else {
 			factionValue = numerator / denominator;
-		}		
-		
+		}
+
 		return createMetricPoint(metricBasePath, factionValue.toString(), sumAggregationMetricProps, metricName);
 	}
 
@@ -546,15 +565,11 @@ public class StatsProcessor {
 				return new String(data);
 			}
 		}
-		
+
 		throw new JMSException("Message is not of TextMessage/BytesMessage.");
 	}
-	
+
 	private enum DerivedField {
-		AverageElapsedTime,
-        AverageCPUTime,
-        AverageCPUTimeWaitingForInputMessage,
-        AverageElapsedTimeWaitingForInputMessage,
-        AverageSizeOfInputMessages
+		AverageElapsedTime, AverageCPUTime, AverageCPUTimeWaitingForInputMessage, AverageElapsedTimeWaitingForInputMessage, AverageSizeOfInputMessages
 	}
 }
