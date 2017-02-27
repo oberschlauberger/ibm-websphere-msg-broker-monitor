@@ -5,6 +5,7 @@ import static com.appdynamics.extensions.wmb.Util.convertToString;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +45,7 @@ public class StatsProcessor {
 	private static final String EXECUTION_GROUP_NAME = "executionGroupName";
 
 	private Map config;
+	private Map subscriptionFields;
 	private XmlParser<ResourceStatistics> resourceStatsParser;
 	private XmlParser<FlowStatistics> flowStatsParser;
 	private MetricPrinter printer;
@@ -55,6 +57,7 @@ public class StatsProcessor {
 
 	public StatsProcessor(Map config, XmlParser resourceStatsParser, XmlParser flowStatsParser, MetricPrinter printer) {
 		this.config = config;
+		this.subscriptionFields = new HashMap();
 		this.printer = printer;
 		this.resourceStatsParser = resourceStatsParser;
 		this.flowStatsParser = flowStatsParser;
@@ -92,6 +95,12 @@ public class StatsProcessor {
 					TopicSubscriber topicSub = session.createDurableSubscriber(topic,
 							convertToString(flowStat.get("subscriberName"), ""));
 					topicSub.setMessageListener(flowSubscriber);
+
+					Object subscriptionFields = flowStat.get("subscriptionFields");
+					if (null != subscriptionFields) {
+						this.subscriptionFields.put(topic.getTopicName(), subscriptionFields);
+						System.out.println("Putting custom config for topic \"" + topic.getTopicName() + "\"");
+					}
 				}
 				logger.info("Mesage Flow Statistic Subscribers are registered.");
 			}
@@ -138,7 +147,8 @@ public class StatsProcessor {
 						try {
 							FlowStatistics flowStatistics = flowStatsParser.parse(text);
 							if (flowStatistics != null) {
-								List<Metric> metrics = buildFlowMetrics(flowStatistics);
+								String subscriptionTopic = message.getJMSDestination().toString();
+								List<Metric> metrics = buildFlowMetrics(flowStatistics, subscriptionTopic);
 								printer.reportMetrics(metrics);
 							}
 						} catch (JAXBException e) {
@@ -187,7 +197,10 @@ public class StatsProcessor {
 		return metrics;
 	}
 
-	private List<Metric> buildFlowMetrics(FlowStatistics flowStatistics) {
+	private List<Metric> buildFlowMetrics(FlowStatistics flowStatistics, String subscriptionTopic) {
+
+		Map config = subscriptionFields.containsKey(subscriptionTopic) ? (Map) subscriptionFields.get(subscriptionTopic)
+				: this.config;
 
 		final List<Metric> metrics = new ArrayList<Metric>();
 

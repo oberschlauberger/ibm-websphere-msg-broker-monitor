@@ -35,8 +35,20 @@ queueManagers:
         - name: "$SYS/Broker/+/ResourceStatistics/#"
           subscriberName: "allResourceStatistics"
       flowStatistics:
-        - name: "$SYS/Broker/+/StatisticsAccounting/SnapShot/#/#"
-          subscriberName: "allFlowStatistics"
+#       - name: "$SYS/Broker/+/StatisticsAccounting/SnapShot/#/#"
+#         subscriberName: "allFlowStatistics"
+        - name: "$SYS/Broker/TESTNODE_fwa/StatisticsAccounting/SnapShot/default/Transformation_Map"
+          subscriberName: "moreSpecificStatistics"
+          subscriptionFields:
+            flowMetricFields:
+              messageFlowFields:
+                - TotalInputMessages
+              threadFields:
+              nodeFields:
+            derivedFlowMetricFields:
+              messageFlowFields:
+              threadFields:
+              nodeFields:flowStatistics:
 
     #For flow metrics, all the fields listed in this section will be reported as metrics.
     #Available fields:

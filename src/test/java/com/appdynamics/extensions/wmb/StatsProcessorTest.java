@@ -11,6 +11,7 @@ import com.appdynamics.extensions.wmb.resourcestats.ResourceType;
 import com.appdynamics.extensions.yml.YmlReader;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import com.ibm.jms.JMSDestination;
 import com.singularity.ee.agent.systemagent.api.MetricWriter;
 import org.junit.Assert;
 import org.junit.Test;
@@ -74,6 +75,9 @@ public class StatsProcessorTest {
 		MetricPrinter printer = new MetricPrinter("Custom Metrics|WMB", "QMgr1", writer);
 		TextMessage mockMsg = mock(TextMessage.class);
 		when(mockMsg.getText()).thenReturn(getFileContents("/flowStats.xml"));
+		JMSDestination mockDest = mock(JMSDestination.class);
+		when(mockMsg.getJMSDestination()).thenReturn(mockDest);
+		when(mockDest.toString()).thenReturn("Mock Destination");
 		
 		// Prepare config where some fields are not configured / null
 		Map configMap = YmlReader
@@ -102,6 +106,9 @@ public class StatsProcessorTest {
 		MetricPrinter printer = new MetricPrinter("Custom Metrics|WMB", "QMgr1", writer);
 		TextMessage mockMsg = mock(TextMessage.class);
 		when(mockMsg.getText()).thenReturn(getFileContents("/flowStats.xml"));
+		JMSDestination mockDest = mock(JMSDestination.class);
+		when(mockMsg.getJMSDestination()).thenReturn(mockDest);
+		when(mockDest.toString()).thenReturn("Mock Destination");
 		
 		// Prepare config where no flow fields are configured / all null
 		Map configMap = YmlReader
