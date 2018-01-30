@@ -27,6 +27,8 @@ import static org.mockito.Mockito.*;
 
 public class FlowStatsProcessorTest {
 
+    private static final String EXPECTED_PATH_PREFIX_FLOWS = "Custom Metrics|WMB|QMgr1|default|Message Flows|Transformation_Map|Transformation_Map|";
+
     ParserFactory parserFactory = new ParserFactory();
 
     @Test
@@ -39,8 +41,8 @@ public class FlowStatsProcessorTest {
         ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
         processor.onMessage(mockMsg);
         verify(writer,atLeastOnce()).printMetric(metricPathCaptor.capture(),valueCaptor.capture(),anyString(),anyString(),anyString());
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Flow Statistics|MessageFlow|TotalElapsedTime"));
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Flow Statistics|Threads|ThreadStatistics|16375|TotalSizeOfInputMessages"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_FLOWS + "TotalElapsedTime"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_FLOWS + "Threads|16375|TotalSizeOfInputMessages"));
         Assert.assertTrue(valueCaptor.getAllValues().contains("1289"));
     }
 
@@ -67,11 +69,11 @@ public class FlowStatsProcessorTest {
         ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
         processor.onMessage(mockMsg);
         verify(writer,atLeastOnce()).printMetric(metricPathCaptor.capture(),valueCaptor.capture(),anyString(),anyString(),anyString());
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Flow Statistics|MessageFlow|AverageCPUTimeWaitingForInputMessage"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_FLOWS + "AverageCPUTimeWaitingForInputMessage"));
         Assert.assertTrue(valueCaptor.getAllValues().contains("26"));
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Flow Statistics|Threads|ThreadStatistics|16375|AverageElapsedTimeWaitingForInputMessage"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_FLOWS + "Threads|16375|AverageElapsedTimeWaitingForInputMessage"));
         Assert.assertTrue(valueCaptor.getAllValues().contains("200034"));
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Flow Statistics|Nodes|NodeStatistics|HTTP Input|AverageCPUTime"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_FLOWS + "Nodes|HTTP Input (WSInputNode)|AverageCPUTime"));
         Assert.assertTrue(valueCaptor.getAllValues().contains("2"));
     }
 
@@ -86,8 +88,8 @@ public class FlowStatsProcessorTest {
         ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
         processor.onMessage(mockMsg);
         verify(writer,atLeastOnce()).printMetric(metricPathCaptor.capture(),valueCaptor.capture(),anyString(),anyString(),anyString());
-        Assert.assertFalse(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Flow Statistics|Threads|ThreadStatistics|16375|AverageElapsedTimeWaitingForInputMessage"));
-        Assert.assertFalse(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Flow Statistics|Nodes|NodeStatistics|HTTP Input|AverageCPUTime"));
+        Assert.assertFalse(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_FLOWS + "Threads|16375|AverageElapsedTimeWaitingForInputMessage"));
+        Assert.assertFalse(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_FLOWS + "Nodes|HTTP Input|AverageCPUTime"));
 
     }
 
@@ -102,8 +104,8 @@ public class FlowStatsProcessorTest {
         ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
         processor.onMessage(mockMsg);
         verify(writer,atLeastOnce()).printMetric(metricPathCaptor.capture(),valueCaptor.capture(),anyString(),anyString(),anyString());
-        Assert.assertFalse(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Flow Statistics|MessageFlow|TotalElapsedTime"));
-        Assert.assertFalse(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Flow Statistics|Threads|ThreadStatistics|16375|TotalSizeOfInputMessages"));
+        Assert.assertFalse(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_FLOWS + "TotalElapsedTime"));
+        Assert.assertFalse(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_FLOWS + "Threads|16375|TotalSizeOfInputMessages"));
 
     }
 
@@ -117,9 +119,9 @@ public class FlowStatsProcessorTest {
         ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
         processor.onMessage(mockMsg);
         verify(writer,atLeastOnce()).printMetric(metricPathCaptor.capture(),valueCaptor.capture(),anyString(),anyString(),anyString());
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Flow Statistics|MessageFlow|TotalElapsedTime"));
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Flow Statistics|Nodes|NodeStatistics|FAILQueue|TerminalStatistics|failure|CountOfInvocations"));
-        Assert.assertFalse(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Flow Statistics|Threads|ThreadStatistics|16375|TotalSizeOfInputMessages"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_FLOWS + "TotalElapsedTime"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_FLOWS + "Nodes|FAILQueue|Terminals|failure (Output)|CountOfInvocations"));
+        Assert.assertFalse(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_FLOWS + "Threads|16375|TotalSizeOfInputMessages"));
     }
 
     @Test
@@ -132,7 +134,7 @@ public class FlowStatsProcessorTest {
         ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
         processor.onMessage(mockMsg);
         verify(writer,atLeastOnce()).printMetric(metricPathCaptor.capture(),valueCaptor.capture(),anyString(),anyString(),anyString());
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Flow Statistics|MessageFlow|Minimum CPU Time"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_FLOWS + "Minimum CPU Time"));
     }
 
     @Test
@@ -147,7 +149,7 @@ public class FlowStatsProcessorTest {
         ArgumentCaptor<String> clusterRollupCaptor = ArgumentCaptor.forClass(String.class);
         processor.onMessage(mockMsg);
         verify(writer,atLeastOnce()).printMetric(metricPathCaptor.capture(),anyString(),aggCaptor.capture(),timeRollupCaptor.capture(),clusterRollupCaptor.capture());
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Flow Statistics|MessageFlow|AverageCPUTime"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_FLOWS + "AverageCPUTime"));
         Assert.assertTrue(aggCaptor.getAllValues().contains("OBSERVATION"));
         Assert.assertTrue(timeRollupCaptor.getAllValues().contains("CURRENT"));
         Assert.assertTrue(clusterRollupCaptor.getAllValues().contains("INDIVIDUAL"));
@@ -164,7 +166,7 @@ public class FlowStatsProcessorTest {
         ArgumentCaptor<String> metricPathCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
         verify(writer,atLeastOnce()).printMetric(metricPathCaptor.capture(),valueCaptor.capture(),anyString(),anyString(),anyString());
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Flow Statistics|MessageFlow|TotalElapsedTime"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_FLOWS + "TotalElapsedTime"));
         Assert.assertTrue(valueCaptor.getAllValues().contains("1000"));
     }
 
@@ -182,7 +184,7 @@ public class FlowStatsProcessorTest {
         ArgumentCaptor<String> metricPathCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
         verify(writer,atLeastOnce()).printMetric(metricPathCaptor.capture(),valueCaptor.capture(),anyString(),anyString(),anyString());
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Flow Statistics|MessageFlow|TotalNumberOfMQErrors"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_FLOWS + "TotalNumberOfMQErrors"));
         Assert.assertTrue(valueCaptor.getAllValues().contains("100"));
     }
 
@@ -196,7 +198,7 @@ public class FlowStatsProcessorTest {
         ArgumentCaptor<String> metricPathCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
         verify(writer,atLeastOnce()).printMetric(metricPathCaptor.capture(),valueCaptor.capture(),anyString(),anyString(),anyString());
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Flow Statistics|Nodes|NodeStatistics|FAILQueue|Type"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_FLOWS + "Nodes|FAILQueue (MQOutput)|Type"));
         Assert.assertTrue(valueCaptor.getAllValues().contains("4"));
     }
 

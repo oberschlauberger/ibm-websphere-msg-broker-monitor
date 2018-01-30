@@ -24,6 +24,12 @@ public class FlowStatsProcessor<T> extends StatsProcessor<T> implements MessageL
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(FlowStatsProcessor.class);
     private static final String EXECUTION_GROUP_NAME = "ExecutionGroupName";
+    private static final String APPLICATION_NAME = "ApplicationName";
+    private static final String MESSAGE_FLOW_NAME = "MessageFlowName";
+    private static final String PATH_SEGMENT_FLOWS = "Message Flows";
+    private static final String PATH_SEGMENT_NODES = "Nodes";
+    private static final String PATH_SEGMENT_THREADS = "Threads";
+    private static final String PATH_SEGMENT_TERMINALS = "Terminals";
 
     private enum DerivedMetric {
         AverageElapsedTime, AverageCPUTime, AverageCPUTimeWaitingForInputMessage, AverageElapsedTimeWaitingForInputMessage, AverageSizeOfInputMessages
@@ -92,31 +98,34 @@ public class FlowStatsProcessor<T> extends StatsProcessor<T> implements MessageL
             //message flow statistics
             MessageFlow messageFlow = flowStatistics.getMessageFlow();
             String executionGroupName = messageFlow.getAttributes().get(new QName(EXECUTION_GROUP_NAME));
+            String applicationName = messageFlow.getAttributes().get(new QName(APPLICATION_NAME));
+            String messageFlowName = messageFlow.getAttributes().get(new QName(MESSAGE_FLOW_NAME));
+            String metricBasePath = join(SEPARATOR,executionGroupName,
+                    PATH_SEGMENT_FLOWS, applicationName, messageFlowName);
+            String metricPath = metricBasePath;
             for (QName key: messageFlow.getAttributes().keySet()) {
                 String messageFlowMetric = join(SEPARATOR,"MessageFlow",key.toString());
                 MetricProperties flowMetricProperties = metricPropsHolder.get(messageFlowMetric);
                 if(flowMetricProperties != null){
                     String value = messageFlow.getAttributes().get(key);
-                    String metricPath = join(SEPARATOR,executionGroupName,
-                            "Flow Statistics", "MessageFlow");
                     Metric metricPoint = createMetricPoint(metricPath,value,flowMetricProperties,key.toString());
                     if(metricPoint != null){
                         metrics.add(metricPoint);
                     }
                 }
             }
-            derivedMetrics(metrics, messageFlow, executionGroupName);
+            derivedMetrics(metrics, messageFlow, metricPath);
 
             // thread statistics
             List<Thread> threadStats = flowStatistics.getThreadStatistics();
             if(threadStats != null){
                 for(Thread t : threadStats){
                     String threadNumber = t.getAttributes().get(new QName("Number"));
+                    metricPath = join(SEPARATOR,metricBasePath,PATH_SEGMENT_THREADS,threadNumber);
                     for (QName key: t.getAttributes().keySet()) {
                         String threadFlowStatistics = join(SEPARATOR,"Threads","ThreadStatistics",key.toString());
                         MetricProperties flowMetricProperties = metricPropsHolder.get(threadFlowStatistics);
                         if(flowMetricProperties != null){
-                            String metricPath = join(SEPARATOR,executionGroupName,"Flow Statistics","Threads","ThreadStatistics",threadNumber);
                             String value = t.getAttributes().get(key);
                             Metric metricPoint = createMetricPoint(metricPath,value,flowMetricProperties,key.toString());
                             if(metricPoint != null){
@@ -126,10 +135,10 @@ public class FlowStatsProcessor<T> extends StatsProcessor<T> implements MessageL
                     }
 
                     //derived metrics - thread statistics
-                    derivedMetrics(metrics, executionGroupName, t, threadNumber);
+                    derivedMetrics(metrics, t, metricPath);
                 }
                 //adding a metric for inserting the count of threads
-                Metric countMetricPoint = createMetricPoint(join(SEPARATOR,executionGroupName,"Flow Statistics","Threads"),Integer.toString(threadStats.size()),new DefaultMetricProperties(),"Number");
+                Metric countMetricPoint = createMetricPoint(join(SEPARATOR,metricBasePath,PATH_SEGMENT_THREADS),Integer.toString(threadStats.size()),new DefaultMetricProperties(),"NumberOfThreads");
                 if(countMetricPoint != null){
                     metrics.add(countMetricPoint);
                 }
@@ -140,11 +149,12 @@ public class FlowStatsProcessor<T> extends StatsProcessor<T> implements MessageL
             if(nodeStats != null){
                 for(Node n : nodeStats){
                     String nodeLabel = n.getAttributes().get(new QName("Label"));
+                    String nodeType = n.getAttributes().get(new QName("Type"));
+                    metricPath = join(SEPARATOR,metricBasePath,PATH_SEGMENT_NODES,nodeLabel+ " (" + nodeType + ")");
                     for(QName key : n.getAttributes().keySet()){
                         String nodeFlowStatistics = join(SEPARATOR,"Nodes","NodeStatistics",key.toString());
                         MetricProperties flowMetricProperties = metricPropsHolder.get(nodeFlowStatistics);
                         if(flowMetricProperties != null) {
-                            String metricPath = join(SEPARATOR,executionGroupName,"Flow Statistics","Nodes","NodeStatistics",nodeLabel);
                             String value = n.getAttributes().get(key);
                             Metric metricPoint = createMetricPoint(metricPath,value,flowMetricProperties,key.toString());
                             if(metricPoint != null){
@@ -152,16 +162,21 @@ public class FlowStatsProcessor<T> extends StatsProcessor<T> implements MessageL
                             }
                         }
                     }
+
+                    //derivedMetrics(metrics, executionGroupName, messageFlowName, n, nodeLabel, nodeType);
+                    derivedMetrics(metrics, n, metricPath);
+
                     //terminal statistics
                     List<Terminal> terminalStats = n.getTerminalStatistics();
                     if(terminalStats != null){
                         for(Terminal t : n.getTerminalStatistics()){
                             String terminalLabel = t.getAttributes().get(new QName("Label"));
+                            String terminalType = t.getAttributes().get(new QName("Type"));
+                            metricPath = join(SEPARATOR,metricBasePath,PATH_SEGMENT_NODES,nodeLabel,PATH_SEGMENT_TERMINALS,terminalLabel + " (" + terminalType + ")");
                             for(QName key : t.getAttributes().keySet()){
                                 String terminalFlowStatistics = join(SEPARATOR,"Nodes","NodeStatistics","TerminalStatistics",key.toString());
                                 MetricProperties flowMetricProperties = metricPropsHolder.get(terminalFlowStatistics);
                                 if(flowMetricProperties != null){
-                                    String metricPath = join(SEPARATOR,executionGroupName,"Flow Statistics","Nodes","NodeStatistics",nodeLabel,"TerminalStatistics",terminalLabel);
                                     String value = t.getAttributes().get(key);
                                     Metric metricPoint = createMetricPoint(metricPath,value,flowMetricProperties,key.toString());
                                     if(metricPoint != null){
@@ -171,11 +186,9 @@ public class FlowStatsProcessor<T> extends StatsProcessor<T> implements MessageL
                             }
                         }
                     }
-
-                    derivedMetrics(metrics, executionGroupName, n, nodeLabel);
                 }
-                //adding a metric for inserting the count of threads
-                Metric countMetricPoint = createMetricPoint(join(SEPARATOR,executionGroupName,"Flow Statistics","Nodes"),Integer.toString(nodeStats.size()),new DefaultMetricProperties(),"Number");
+                //adding a metric for inserting the count of nodes
+                Metric countMetricPoint = createMetricPoint(join(SEPARATOR,metricBasePath,PATH_SEGMENT_NODES),Integer.toString(nodeStats.size()),new DefaultMetricProperties(),"NumberOfNodes");
                 if(countMetricPoint != null){
                     metrics.add(countMetricPoint);
                 }
@@ -184,14 +197,13 @@ public class FlowStatsProcessor<T> extends StatsProcessor<T> implements MessageL
         return metrics;
     }
 
-    private void derivedMetrics(List<Metric> metrics, String executionGroupName, Node n, String nodeLabel) {
+    private void derivedMetrics(List<Metric> metrics, Node n, String metricPath) {
         for(DerivedMetric metric : DerivedMetric.values()){
             String nodeStatistics = join(SEPARATOR,"Nodes","NodeStatistics",metric.toString());
             MetricProperties flowMetricProperties = metricPropsHolder.get(nodeStatistics);
             try{
                 if(flowMetricProperties != null){
                     Metric metricPoint = null;
-                    String metricPath = join(SEPARATOR,executionGroupName,"Flow Statistics","Nodes","NodeStatistics",nodeLabel);
                     switch(metric){
                         case AverageElapsedTime:
                             metricPoint = createFractionMetricPoint(n.getAttributes(),
@@ -219,14 +231,13 @@ public class FlowStatsProcessor<T> extends StatsProcessor<T> implements MessageL
         }
     }
 
-    private void derivedMetrics(List<Metric> metrics, String executionGroupName, Thread t, String threadNumber) {
+    private void derivedMetrics(List<Metric> metrics, Thread t, String metricPath) {
         for(DerivedMetric metric : DerivedMetric.values()){
             String threadFlowStatistics = join(SEPARATOR,"Threads","ThreadStatistics",metric.toString());
             MetricProperties flowMetricProperties = metricPropsHolder.get(threadFlowStatistics);
             try{
                 if(flowMetricProperties != null){
                     Metric metricPoint = null;
-                    String metricPath = join(SEPARATOR,executionGroupName,"Flow Statistics","Threads","ThreadStatistics",threadNumber);
                     switch(metric){
                         case AverageElapsedTime:
                             metricPoint = createFractionMetricPoint(t.getAttributes(),
@@ -270,7 +281,7 @@ public class FlowStatsProcessor<T> extends StatsProcessor<T> implements MessageL
     }
 
 
-    private void derivedMetrics(List<Metric> metrics, MessageFlow messageFlow, String executionGroupName) {
+    private void derivedMetrics(List<Metric> metrics, MessageFlow messageFlow, String metricPath) {
         //derived metrics - message flow
         for(DerivedMetric metric : DerivedMetric.values()){
             String messageFlowMetric = join(SEPARATOR,"MessageFlow",metric.toString());
@@ -278,7 +289,6 @@ public class FlowStatsProcessor<T> extends StatsProcessor<T> implements MessageL
             try{
                 if(flowMetricProperties != null){
                     Metric metricPoint = null;
-                    String metricPath = join(SEPARATOR,executionGroupName,"Flow Statistics","MessageFlow");
                     switch(metric){
                         case AverageElapsedTime:
                             metricPoint = createFractionMetricPoint(messageFlow.getAttributes(),
