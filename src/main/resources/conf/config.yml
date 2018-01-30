@@ -55,6 +55,17 @@ queueManagers:
     #https://www.ibm.com/support/knowledgecenter/SSMKHH_10.0.0/com.ibm.etools.mft.doc/bn43250_.htm
     metrics:
       resourceStatistics:
+       # Use this wildcard to get all available resource statistics.
+       #- type: "*"
+       #  identifiers: ["*"]
+       #  include:
+       #    - "*" : ""
+       # You can combine wildcards with specified type / identifiers / includes:
+       #- type: "Parsers"
+       #  identifiers: ["*"]
+       #  include:
+       #    - "*" : ""
+
         - type: "JVM"
           identifiers: ["summary","Heap Memory","Non-Heap Memory","Garbage Collection - Copy","Garbage Collection - MarkSweepCompact"]
           include:
