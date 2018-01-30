@@ -21,6 +21,7 @@ public class ResourceStatsProcessor<T> extends StatsProcessor<T> implements Mess
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(ResourceStatsProcessor.class);
     private static final String EXECUTION_GROUP_NAME = "executionGroupName";
+    private static final String PATH_SEGMENT_RESOURCES = "Resources";
 
     private Map<String,MetricProperties> metricPropsHolder;
 
@@ -47,10 +48,10 @@ public class ResourceStatsProcessor<T> extends StatsProcessor<T> implements Mess
      * @param message
      */
     public void onMessage(Message message) {
-    	long startTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
         String text = null;
         try {
-        	text = getMessageString(message);
+            text = getMessageString(message);
             if(text != null) {
                 try {
                     T resourceStatistics = parser.parse(text);
@@ -78,19 +79,31 @@ public class ResourceStatsProcessor<T> extends StatsProcessor<T> implements Mess
             //String brokerName = resourceStatistics.getAttributes().get(new QName(BROKER_LABEL));
             String executionGroupName = resourceStatistics.getAttributes().get(new QName(EXECUTION_GROUP_NAME));
             if(resourceStatistics.getResourceType() != null){
+                String catchAllTypesAndIdentifiersAndKeysMetric = join(SEPARATOR,"*","*","*");
                 for(ResourceType resourceType : resourceStatistics.getResourceType()){
                     String resourceTypeName = resourceType.getName();
+                    String catchAllKeysAndIdentifiersForTypeMetric = join(SEPARATOR,resourceTypeName,"*","*");
                     if(resourceType.getResourceIdentifiers() != null){
                         for(ResourceIdentifier resourceIdentifier : resourceType.getResourceIdentifiers()){
                             String resourceIdName = resourceIdentifier.getName();
                             for (QName key: resourceIdentifier.getAttributes().keySet()) {
                                 String resourceMetric = join(SEPARATOR,resourceTypeName,resourceIdName,key.toString());
-                                MetricProperties resourceMetricProps = metricPropsHolder.get(resourceMetric);
-                                if(resourceMetricProps != null){
+                                String catchAllIdentifiersForTypeMetric = join(SEPARATOR,resourceTypeName,"*",key.toString());
+                                MetricProperties metricProps = metricPropsHolder.get(resourceMetric);
+                                if (null == metricProps) {
+                                    metricProps = metricPropsHolder.get(catchAllIdentifiersForTypeMetric);
+                                }
+                                if (null == metricProps) {
+                                    metricProps = metricPropsHolder.get(catchAllKeysAndIdentifiersForTypeMetric);
+                                }
+                                if (null == metricProps) {
+                                    metricProps = metricPropsHolder.get(catchAllTypesAndIdentifiersAndKeysMetric);
+                                }
+                                if(metricProps != null){
                                     String value = resourceIdentifier.getAttributes().get(key);
                                     String metricPath = join(SEPARATOR,executionGroupName,
-                                            "Resource Statistics", resourceTypeName, resourceIdName);
-                                    Metric metricPoint = createMetricPoint(metricPath,value,resourceMetricProps,key.toString());
+                                            PATH_SEGMENT_RESOURCES, resourceTypeName, resourceIdName);
+                                    Metric metricPoint = createMetricPoint(metricPath,value,metricProps,key.toString());
                                     if(metricPoint != null){
                                         metrics.add(metricPoint);
                                     }

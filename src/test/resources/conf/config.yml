@@ -117,6 +117,10 @@ queueManagers:
             - BytesReceived: "BytesReceived"  #The total amount of data received (by TCPIPClientInput or TCPIPClientReceive nodes),  excluding SSL wrappers.
             - FailedConnections : "FailedConnections"  #The total number of attempted connections that failed since the last integration server restarts.
 
+        - type: "Parsers"
+          identifiers: ["*"]
+          include:
+            - "*" : ""
 
       flowStatistics:
         - type: "MessageFlow"

@@ -26,6 +26,8 @@ import static org.mockito.Mockito.*;
 
 public class ResourceStatsProcessorTest {
 
+    private static final String EXPECTED_PATH_PREFIX_RESOURCES = "Custom Metrics|WMB|QMgr1|default|Resources|";
+
     ParserFactory parserFactory = new ParserFactory();
 
     @Test
@@ -38,8 +40,8 @@ public class ResourceStatsProcessorTest {
         ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
         processor.onMessage(mockMsg);
         verify(writer,atLeastOnce()).printMetric(metricPathCaptor.capture(),valueCaptor.capture(),anyString(),anyString(),anyString());
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Resource Statistics|JVM|summary|InitialMemoryInMB"));
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Resource Statistics|Sockets|summary|TotalDataSent_KB"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_RESOURCES + "JVM|summary|InitialMemoryInMB"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_RESOURCES + "Sockets|summary|TotalDataSent_KB"));
         Assert.assertTrue(valueCaptor.getAllValues().contains("256"));
     }
 
@@ -78,11 +80,11 @@ public class ResourceStatsProcessorTest {
         ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
         processor.onMessage(mockMsg);
         verify(writer,atLeastOnce()).printMetric(metricPathCaptor.capture(),valueCaptor.capture(),anyString(),anyString(),anyString());
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Resource Statistics|JVM|summary|InitialMemoryInMB"));
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Resource Statistics|JVM|Garbage Collection - MarkSweepCompact|CumulativeNumberOfGCCollections"));
-        Assert.assertFalse(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Resource Statistics|Sockets|summary|TotalDataSent_KB"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_RESOURCES + "JVM|summary|InitialMemoryInMB"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_RESOURCES + "JVM|Garbage Collection - MarkSweepCompact|CumulativeNumberOfGCCollections"));
+        Assert.assertFalse(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_RESOURCES + "Sockets|summary|TotalDataSent_KB"));
         Assert.assertTrue(valueCaptor.getAllValues().contains("256"));
-        Assert.assertFalse(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Resource Statistics|Parsers|summary|ApproxMemKB"));
+        Assert.assertFalse(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_RESOURCES + "Parsers|summary|ApproxMemKB"));
     }
 
     @Test
@@ -95,7 +97,7 @@ public class ResourceStatsProcessorTest {
         ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
         processor.onMessage(mockMsg);
         verify(writer,atLeastOnce()).printMetric(metricPathCaptor.capture(),valueCaptor.capture(),anyString(),anyString(),anyString());
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Resource Statistics|JDBCConnectionPools|summary|This is max pool"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_RESOURCES + "JDBCConnectionPools|summary|This is max pool"));
     }
 
     @Test
@@ -110,7 +112,7 @@ public class ResourceStatsProcessorTest {
         ArgumentCaptor<String> clusterRollupCaptor = ArgumentCaptor.forClass(String.class);
         processor.onMessage(mockMsg);
         verify(writer,atLeastOnce()).printMetric(metricPathCaptor.capture(),anyString(),aggCaptor.capture(),timeRollupCaptor.capture(),clusterRollupCaptor.capture());
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Resource Statistics|JDBCConnectionPools|summary|CumulativeTimedOutRequests"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_RESOURCES + "JDBCConnectionPools|summary|CumulativeTimedOutRequests"));
         Assert.assertTrue(aggCaptor.getAllValues().contains("OBSERVATION"));
         Assert.assertTrue(timeRollupCaptor.getAllValues().contains("CURRENT"));
         Assert.assertTrue(clusterRollupCaptor.getAllValues().contains("INDIVIDUAL"));
@@ -127,7 +129,7 @@ public class ResourceStatsProcessorTest {
         ArgumentCaptor<String> metricPathCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
         verify(writer,atLeastOnce()).printMetric(metricPathCaptor.capture(),valueCaptor.capture(),anyString(),anyString(),anyString());
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Resource Statistics|JDBCConnectionPools|summary|CumulativeTimedOutRequests"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_RESOURCES + "JDBCConnectionPools|summary|CumulativeTimedOutRequests"));
         Assert.assertTrue(valueCaptor.getAllValues().contains("500000"));
     }
 
@@ -145,8 +147,24 @@ public class ResourceStatsProcessorTest {
         ArgumentCaptor<String> metricPathCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
         verify(writer,atLeastOnce()).printMetric(metricPathCaptor.capture(),valueCaptor.capture(),anyString(),anyString(),anyString());
-        Assert.assertTrue(metricPathCaptor.getAllValues().contains("Custom Metrics|WMB|QMgr1|default|Resource Statistics|JDBCConnectionPools|summary|CumulativeDelayedRequests"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_RESOURCES + "JDBCConnectionPools|summary|CumulativeDelayedRequests"));
         Assert.assertTrue(valueCaptor.getAllValues().contains("750"));
+    }
+
+    @Test
+    public void shouldEmitMetricsForAllIdentifiersWhenWildCardIsConfigured() throws IOException, JMSException, JAXBException {
+        MetricWriteHelper writer = mock(MetricWriteHelper.class);
+        ResourceStatsProcessor processor = getResourceStatProcessor("/conf/config.yml",writer);
+        TextMessage mockMsg = mock(TextMessage.class);
+        when(mockMsg.getText()).thenReturn(getFileContents("/resourceStats.xml"));
+        ArgumentCaptor<String> metricPathCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
+        processor.onMessage(mockMsg);
+        verify(writer,atLeastOnce()).printMetric(metricPathCaptor.capture(),valueCaptor.capture(),anyString(),anyString(),anyString());
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_RESOURCES + "Parsers|summary|Threads"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_RESOURCES + "Parsers|[Deleted]|Threads"));
+        Assert.assertTrue(metricPathCaptor.getAllValues().contains(EXPECTED_PATH_PREFIX_RESOURCES + "Parsers|[Administration]|Threads"));
+        Assert.assertTrue(valueCaptor.getAllValues().contains("256"));
     }
 
     private String getFileContents(String filepath) throws IOException {
