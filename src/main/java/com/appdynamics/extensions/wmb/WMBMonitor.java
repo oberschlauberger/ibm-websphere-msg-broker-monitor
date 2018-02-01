@@ -12,14 +12,10 @@ import com.singularity.ee.agent.systemagent.api.TaskOutput;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 
-public class WMBMonitor extends AManagedMonitor{
+public class WMBMonitor extends AManagedMonitor implements WMBMonitorTaskShutdownHandler {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(WMBMonitor.class);
     private static final String CONFIG_ARG = "config-file";
@@ -28,7 +24,7 @@ public class WMBMonitor extends AManagedMonitor{
     private static ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private static CountDownLatch sharedLatch = new CountDownLatch(1);
     private MonitorConfiguration configuration;
-
+    private final Queue<WMBMonitorTask> pendingTasks = new LinkedBlockingQueue<WMBMonitorTask>();
 
     public WMBMonitor(){
         System.out.println(logVersion());
@@ -62,6 +58,20 @@ public class WMBMonitor extends AManagedMonitor{
         return new TaskOutput("WMB monitor run completed successfully.");
     }
 
+    public synchronized void onTaskShutdown(WMBMonitorTask task) {
+        // restart all tasks with a delay of 1 minute
+        task.setInitialDelayInMinutes(1);
+        pendingTasks.add(task);
+    }
+
+    public void restartPendingTasks () {
+        while (!pendingTasks.isEmpty()) {
+            WMBMonitorTask task = pendingTasks.remove();
+            // restart pending stask
+            configuration.getExecutorService().execute(task);
+        }
+    }
+
     private void initialize(Map<String, String> taskArgs) {
         //read the config.
         final String configFilePath = taskArgs.get(CONFIG_ARG);
@@ -76,6 +86,7 @@ public class WMBMonitor extends AManagedMonitor{
 
     private WMBMonitorTask createTask(Map manager) {
         return new WMBMonitorTask.Builder()
+                .shutdownHandler(this)
                 .metricPrefix(configuration.getMetricPrefix())
                 .metricWriter(configuration.getMetricWriter())
                 .manager(manager)
@@ -116,7 +127,11 @@ public class WMBMonitor extends AManagedMonitor{
         try {
             wmbMonitor.execute(taskArgs,null);
             logger.info("Connection started. Wait Indefinitely...");
-            sharedLatch.await();
+            while (sharedLatch.getCount() > 0) {
+                // check for and restart pending tasks every 10 seconds
+                wmbMonitor.restartPendingTasks();
+                TimeUnit.SECONDS.sleep(10);
+            }
             logger.info("My parent has died. I have to die as well.");
             System.exit(0);
         }
