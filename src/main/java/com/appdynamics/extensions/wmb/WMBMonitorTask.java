@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
+import javax.jms.TopicConnection;
 import javax.xml.bind.JAXBException;
 import java.util.Map;
 
@@ -34,7 +35,7 @@ class WMBMonitorTask implements Runnable{
             logger.info("Executing a run of WMBMonitor.");
             displayName = convertToString(queueManagerConfig.get("name"),"");
             MetricPrinter metricPrinter = new MetricPrinter(metricPrefix,displayName,metricWriter);
-            Connection conn = new ConnectionFactory().createConnection(queueManagerConfig);
+            TopicConnection conn = new ConnectionFactory().createConnection(queueManagerConfig);
             //subscribe subscribers
             StatsSubscription sub = new StatsSubscription(queueManagerConfig,metricPrinter);
             sub.subscribe(conn);

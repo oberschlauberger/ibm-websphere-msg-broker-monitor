@@ -37,16 +37,20 @@ queueManagers:
     clientID: "AppDynamics Extension for Message Broker"
 
     #Resource Statistics Subscribers - https://www.ibm.com/support/knowledgecenter/en/SSMKHH_9.0.0/com.ibm.etools.mft.doc/bj43310_.htm
-    #Please make sure to provide unique subscriber name for each statistic subscription.
+    #Please make sure to provide unique subscriber name for each statistic subscription when using durable subscribers.
+    #Subscriber name is not used for non-durable subscribers.
     resourceStatisticsSubscribers:
       - topic: "$SYS/Broker/+/ResourceStatistics/#"
         subscriberName: "allResourceStatistics"
+        durable: false
 
     #Flow Statistics Subscribers - https://www.ibm.com/support/knowledgecenter/en/SSMKHH_9.0.0/com.ibm.etools.mft.doc/aq20080_.htm
-    #Please make sure to provide unique subscriber name for each statistic subscription.
+    #Please make sure to provide unique subscriber name for each statistic subscription when using durable subscribers.
+    #Subscriber name is not used for non-durable subscribers.
     flowStatisticsSubscribers:
       - topic: "$SYS/Broker/+/StatisticsAccounting/SnapShot/#/#"
         subscriberName: "allFlowStatistics"
+        durable: false
 
 
     #For resource and flowstatistics, all the fields listed in this section will be reported as metrics.

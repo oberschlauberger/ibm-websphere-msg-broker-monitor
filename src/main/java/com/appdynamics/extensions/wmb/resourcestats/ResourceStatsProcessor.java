@@ -29,16 +29,25 @@ public class ResourceStatsProcessor<T> extends StatsProcessor<T> implements Mess
         this.metricPropsHolder = buildMetricProperties("metrics","resourceStatistics");
     }
 
-    public void subscribe(Session session) throws JMSException {
+    public void subscribe(TopicSession session) throws JMSException {
         if (config.get("resourceStatisticsSubscribers") != null) {
             List<Map> resourceSubscribers = (List<Map>) config.get("resourceStatisticsSubscribers");
             for (Map resourceSub : resourceSubscribers) {
-                Topic topic = session.createTopic(convertToString(resourceSub.get("topic"), ""));
-                TopicSubscriber topicSub = session.createDurableSubscriber(topic,
-                        convertToString(resourceSub.get("subscriberName"), ""));
+                String topicPath = convertToString(resourceSub.get("topic"), "");
+                Boolean durable = Boolean.valueOf(convertToString(resourceSub.get("durable"), "false"));
+                Topic topic = session.createTopic(topicPath);
+                TopicSubscriber topicSub;
+                if (durable) {
+                    String subscriberName = convertToString(resourceSub.get("subscriberName"), "");
+                    topicSub = session.createDurableSubscriber(topic, subscriberName);
+                    logger.info("Registered durable subscriber \"" + subscriberName + "\" for topic \"" + topicPath + "\"");
+                } else {
+                    topicSub = session.createSubscriber(topic);
+                    logger.info("Registered non-durable subscriber for topic \"" + topicPath + "\"");
+                }
                 topicSub.setMessageListener(this);
             }
-            logger.info("Resource Statistic Subscribers are registered.");
+            logger.info("Resource statistic subscribers are registered.");
         }
     }
 

@@ -6,9 +6,7 @@ import com.appdynamics.extensions.wmb.resourcestats.ResourceStatistics;
 import com.appdynamics.extensions.wmb.resourcestats.ResourceStatsProcessor;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.Session;
+import javax.jms.*;
 import javax.xml.bind.JAXBException;
 import java.util.Map;
 
@@ -24,8 +22,8 @@ class StatsSubscription {
         this.printer = metricPrinter;
     }
 
-    void subscribe(Connection conn) throws JMSException, JAXBException {
-        Session session = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+    void subscribe(TopicConnection conn) throws JMSException, JAXBException {
+        TopicSession session = conn.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
         // Subscribe to resource statistics
         if (config.get("resourceStatisticsSubscribers") != null) {
             StatsProcessor<ResourceStatistics> resourceStatsProcessor = new ResourceStatsProcessor<ResourceStatistics>(config,parserFactory.getResourceStatisticsParser(),printer);

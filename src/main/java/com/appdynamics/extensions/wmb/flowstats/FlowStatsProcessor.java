@@ -36,18 +36,25 @@ public class FlowStatsProcessor<T> extends StatsProcessor<T> implements MessageL
         this.metricPropsHolder.putAll(derivedPropsHolder);
     }
 
-
-
-    public void subscribe(Session session) throws JMSException {
+    public void subscribe(TopicSession session) throws JMSException {
         if (config.get("flowStatisticsSubscribers") != null) {
-            List<Map> resourceSubscribers = (List<Map>) config.get("flowStatisticsSubscribers");
-            for (Map resourceSub : resourceSubscribers) {
-                Topic topic = session.createTopic(convertToString(resourceSub.get("topic"), ""));
-                TopicSubscriber topicSub = session.createDurableSubscriber(topic,
-                        convertToString(resourceSub.get("subscriberName"), ""));
+            List<Map> flowSubscribers = (List<Map>) config.get("flowStatisticsSubscribers");
+            for (Map flowSub : flowSubscribers) {
+                String topicPath = convertToString(flowSub.get("topic"), "");
+                Boolean durable = Boolean.valueOf(convertToString(flowSub.get("durable"), "false"));
+                Topic topic = session.createTopic(topicPath);
+                TopicSubscriber topicSub;
+                if (durable) {
+                    String subscriberName = convertToString(flowSub.get("subscriberName"), "");
+                    topicSub = session.createDurableSubscriber(topic, subscriberName);
+                    logger.info("Registered durable subscriber \"" + subscriberName + "\" for topic \"" + topicPath + "\"");
+                } else {
+                    topicSub = session.createSubscriber(topic);
+                    logger.info("Registered non-durable subscriber for topic \"" + topicPath + "\"");
+                }
                 topicSub.setMessageListener(this);
             }
-            logger.info("Message Flow Statistic Subscribers are registered.");
+            logger.info("Message flow statistic subscribers are registered.");
         }
     }
 

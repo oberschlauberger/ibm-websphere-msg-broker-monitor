@@ -2,11 +2,13 @@ package com.appdynamics.extensions.wmb;
 
 
 import com.ibm.mq.jms.MQConnectionFactory;
+import com.ibm.mq.jms.MQTopicConnectionFactory;
 import com.ibm.msg.client.wmq.WMQConstants;
 import org.slf4j.LoggerFactory;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
+import javax.jms.TopicConnection;
 import java.util.Map;
 
 import static com.appdynamics.extensions.wmb.Util.convertToString;
@@ -18,9 +20,9 @@ class ConnectionFactory {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(ConnectionFactory.class);
 
-    Connection createConnection(Map queueManagerConfig) throws JMSException {
+    TopicConnection createConnection(Map queueManagerConfig) throws JMSException {
         logger.info("Connecting to the queue manager...");
-        MQConnectionFactory cf = new MQConnectionFactory();
+        MQTopicConnectionFactory cf = new MQTopicConnectionFactory();
         cf.setHostName(convertToString(queueManagerConfig.get("host"),"localhost"));
         String portStr = convertToString(queueManagerConfig.get("port"),"");
         int port = portStr != null ? Integer.parseInt(portStr) : -1;
@@ -46,10 +48,10 @@ class ConnectionFactory {
             cf.setSSLCipherSuite(convertToString(queueManagerConfig.get("cipherSuite"),""));
         }
 
-        Connection connection = null;
+        TopicConnection connection = null;
         String userId=convertToString(queueManagerConfig.get("userID"),"");
         String password=convertToString(queueManagerConfig.get("password"),"");
-        connection = cf.createConnection(userId,password);
+        connection = cf.createTopicConnection(userId,password);
         connection.setClientID(convertToString(queueManagerConfig.get("clientID"),""));
         logger.info("Connection to QM {} is successful..",convertToString(queueManagerConfig.get("name"),""));
         return connection;

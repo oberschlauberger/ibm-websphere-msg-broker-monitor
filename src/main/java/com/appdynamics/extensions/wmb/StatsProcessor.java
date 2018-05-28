@@ -27,7 +27,7 @@ public abstract class StatsProcessor<T> {
         this.parser = parser;
     }
 
-    public abstract void subscribe(Session session) throws JMSException;
+    public abstract void subscribe(TopicSession session) throws JMSException;
 
     protected MetricProperties createMetricProperties(Map metadata, String metricName, String alias) {
         MetricProperties props = new DefaultMetricProperties();
